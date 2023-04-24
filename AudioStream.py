@@ -85,7 +85,7 @@ def speech_recognize():
 
     with test as source:
         audio = r.record(source)
-    #c=r.recognize_sphinx(audio, language="D:\python virtual environment\Lib\site-packages\speech_recognition\pocketsphinx-data\zh-CN")
+    #c=r.recognize_sphinx(audio, language="zh-CN")
     c=r.recognize_google(audio, language="zh-TW")
 
     print(c)
