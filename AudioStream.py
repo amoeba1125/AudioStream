@@ -7,9 +7,12 @@ from pydub.playback import play
 import io
 import subprocess
 import time
+import speech_recognition as sr
 
 CHUNK_SIZE = 1024  # 每個音訊分段的大小
-FILE_NAME = "audio.as"  # 設定音訊檔案名稱
+FILE_NAME = "audio.as"  # 設定錄製檔案名稱
+AS_NAME = "audio.as"    # 設定.as檔案名稱
+MP3_NAME = "audio.mp3"  # 設定.mp3檔案名稱
 OUTPUT_NAME = "audio.wav"   # 設定轉檔後名稱
 FILE_SIZE_LIMIT = 1024 * 1024 * 10  # 設定檔案大小上限，10MB
 
@@ -26,7 +29,6 @@ def write_audio_chunk(data):
     else:
         # 檔案不存在，建立新檔案並寫入音訊分段資料
         with open(FILE_NAME, "wb") as f:
-            print("建立新檔")
             f.write(data)
 
 def record_audio():
@@ -49,12 +51,16 @@ def record_audio():
         if keyboard.is_pressed('enter'):
             break
 
-def transformat_audio():
+def transformat_as():
     # 刪除現有的檔案
     if os.path.isfile(OUTPUT_NAME):
         os.remove(OUTPUT_NAME)
     # 使用ffmpeg將音訊檔案轉換成WAV格式
-    subprocess.call(["ffmpeg", "-f", "s16le", "-ar", "44100", "-ac", "1", "-i", FILE_NAME, OUTPUT_NAME])
+    subprocess.call(["ffmpeg", "-f", "s16le", "-ar", "44100", "-ac", "1", "-i", AS_NAME, OUTPUT_NAME])
+
+def transformat_mp3():
+    sound = AudioSegment.from_mp3(MP3_NAME)
+    sound.export(OUTPUT_NAME, format="wav")
 
 def play_audio():
     audio_chunks = []
@@ -73,12 +79,27 @@ def play_audio():
     audio_segment = AudioSegment.from_file(io.BytesIO(audio_data), format="wav")
     play(audio_segment)
 
-char = input("r:錄製音訊\nt:音訊轉檔\np:播放音訊\n\n輸入：")
+def speech_recognize():
+    r = sr.Recognizer()
+    test = sr.AudioFile(OUTPUT_NAME)
+
+    with test as source:
+        audio = r.record(source)
+    #c=r.recognize_sphinx(audio, language="D:\python virtual environment\Lib\site-packages\speech_recognition\pocketsphinx-data\zh-CN")
+    c=r.recognize_google(audio, language="zh-TW")
+
+    print(c)
+
+char = input("r:錄製音訊\na:.as轉.wav\nm:.mp3轉.wav\np:播放音訊\ns:語音辨識\n\n輸入：")
 if char == "r":
     record_audio()
-elif char == "t":
-    transformat_audio()
+elif char == "a":
+    transformat_as()
+elif char == "m":
+    transformat_mp3()
 elif char == "p":
     play_audio()
+elif char == "s":
+    speech_recognize()
 else:
     print("輸入錯誤")
